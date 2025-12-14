@@ -1,0 +1,57 @@
+// Gamification Models
+// Add to main schema.prisma or import from here
+
+model Badge {
+  id         String    @id @default(cuid())
+  userId     String
+  badgeType  BadgeType
+  earnedAt   DateTime  @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeType])
+}
+
+model Achievement {
+  id              String          @id @default(cuid())
+  userId          String
+  achievementType AchievementType
+  progress        Int             @default(0)
+  targetProgress  Int             @default(100)
+  completed       Boolean         @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, achievementType])
+}
+
+enum BadgeType {
+  FIRST_LESSON       // Completed first lesson
+  QUIZ_MASTER        // Passed 10 quizzes
+  WEEK_STREAK        // 7-day learning streak
+  MONTH_STREAK       // 30-day learning streak
+  PERFECT_SCORE      // Got 100% on a quiz
+  EARLY_BIRD         // Learned before 9am
+  NIGHT_OWL          // Learned after 9pm
+  SPEED_LEARNER      // Completed lesson in half estimated time
+  DEEP_DIVER         // Spent 2x estimated time on a lesson
+  ROADMAP_COMPLETE   // Completed entire roadmap
+}
+
+enum AchievementType {
+  COMPLETE_10_LESSONS
+  COMPLETE_50_LESSONS
+  COMPLETE_100_LESSONS
+  PASS_25_QUIZZES
+  PASS_100_QUIZZES
+  REACH_LEVEL_10
+  REACH_LEVEL_25
+  REACH_LEVEL_50
+  STREAK_30_DAYS
+  STREAK_100_DAYS
+  STREAK_365_DAYS
+  PERFECT_SCORES_10
+  TUTOR_SESSIONS_10
+}

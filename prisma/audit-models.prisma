@@ -1,0 +1,29 @@
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
+}
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  action            String
+  resource          String
+  resourceId        String?
+  oldValue          Json?
+  newValue          Json?
+  ipAddress         String?
+  userAgent         String?
+  metadata          Json?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
