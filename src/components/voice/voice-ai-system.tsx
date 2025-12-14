@@ -124,9 +124,9 @@ export function VoiceAISystem() {
     useEffect(() => {
         setTimeout(() => {
             if (session?.user) {
-                speak(`Welcome back ${session.user.name}! I'm your AI assistant. Press the mic or say commands.`)
+                speak(`Welcome to AIM Technologies! Hello ${session.user.name}, I'm your AI assistant. Press the mic or say commands.`)
             } else {
-                speak('Welcome! I can help you learn. Press the microphone to get started.')
+                speak('Welcome to AIM Technologies! I can help you learn. Press the microphone to get started.')
             }
         }, 1000)
     }, [session])
@@ -176,8 +176,8 @@ export function VoiceAISystem() {
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] p-3 rounded-lg ${msg.role === 'user'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-slate-100 text-slate-800'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-slate-100 text-slate-800'
                                     }`}>
                                     {msg.content}
                                 </div>
