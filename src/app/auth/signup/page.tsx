@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,9 +11,11 @@ import { Separator } from "@/components/ui/separator"
 import { Loader2, Mail, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { getTranslation } from '@/lib/translations'
 
 export default function SignUp() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -22,6 +24,19 @@ export default function SignUp() {
     confirmPassword: ''
   })
   const [error, setError] = useState('')
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null)
+
+  // Check for language from localStorage or URL params  
+  useEffect(() => {
+    const langFromStorage = localStorage.getItem('selectedLanguage')
+    const langFromUrl = searchParams.get('lang')
+    setSelectedLanguage(langFromUrl || langFromStorage || 'en-US')
+  }, [searchParams])
+
+  // Translation helper
+  const t = (key: string, params?: Record<string, string>) => {
+    return getTranslation(selectedLanguage || 'en-US', key, params)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +71,20 @@ export default function SignUp() {
         })
 
         if (result?.ok) {
+          // Save language preference if selected
+          if (selectedLanguage) {
+            try {
+              await fetch('/api/user/language', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ language: selectedLanguage })
+              })
+            } catch (err) {
+              console.error('Failed to save language:', err)
+            }
+          }
+
+          // Redirect back to onboarding to complete the process
           router.push('/onboarding')
         }
       } else {
@@ -97,10 +126,12 @@ export default function SignUp() {
         <Card className="border-blue-100 shadow-2xl">
           <CardHeader className="text-center pb-8">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-              Create Account
+              {t('common.signUp')}
             </CardTitle>
             <CardDescription className="text-base mt-2">
-              Join thousands of learners on their journey
+              {selectedLanguage === 'hi-IN' ? 'हजारों शिक्षार्थियों के साथ अपनी यात्रा शुरू करें' :
+                selectedLanguage === 'es-ES' ? 'Únete a miles de estudiantes en su viaje' :
+                  'Join thousands of learners on their journey'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -111,7 +142,9 @@ export default function SignUp() {
                 onClick={handleGoogleSignIn}
               >
                 <Mail className="w-5 h-5 mr-2" />
-                Continue with Google
+                {selectedLanguage === 'hi-IN' ? 'Google से जारी रखें' :
+                  selectedLanguage === 'es-ES' ? 'Continuar con Google' :
+                    'Continue with Google'}
               </Button>
             </motion.div>
 
@@ -121,7 +154,9 @@ export default function SignUp() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white px-3 text-gray-500 font-medium">
-                  Or register with email
+                  {selectedLanguage === 'hi-IN' ? 'या ईमेल से पंजीकरण करें' :
+                    selectedLanguage === 'es-ES' ? 'O registrarse con email' :
+                      'Or register with email'}
                 </span>
               </div>
             </div>

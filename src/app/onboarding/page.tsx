@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import LanguageSelector from '@/components/onboarding/language-selector'
@@ -20,22 +20,42 @@ export default function OnboardingPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('en-US')
   const [isGenerating, setIsGenerating] = useState(false)
 
+  // Check if language was already selected (returning from signup)
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('selectedLanguage')
+    if (savedLanguage && session) {
+      // User returned after signup with language already selected
+      setSelectedLanguage(savedLanguage)
+      setStage('onboarding')
+      // Clear the stored language
+      localStorage.removeItem('selectedLanguage')
+    }
+  }, [session])
+
   const handleLanguageSelect = async (languageCode: string) => {
     setSelectedLanguage(languageCode)
 
-    // Save language preference to database
-    try {
-      await fetch('/api/user/language', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: languageCode })
-      })
-    } catch (error) {
-      console.error('Failed to save language:', error)
-    }
+    // Save language preference to localStorage for use after signup
+    localStorage.setItem('selectedLanguage', languageCode)
 
-    // Move to onboarding
-    setStage('onboarding')
+    // Save to database if user is already logged in
+    if (session) {
+      try {
+        await fetch('/api/user/language', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: languageCode })
+        })
+      } catch (error) {
+        console.error('Failed to save language:', error)
+      }
+
+      // If already logged in, continue to onboarding
+      setStage('onboarding')
+    } else {
+      // Not logged in - redirect to signup with language
+      router.push(`/auth/signup?lang=${languageCode}&returnTo=/onboarding`)
+    }
   }
 
   const handleOnboardingComplete = async (data: OnboardingData) => {
@@ -43,12 +63,19 @@ export default function OnboardingPage() {
     setIsGenerating(true)
 
     try {
-      // Create onboarding profile
+      // Create onboarding profile with correct parameter structure
       const response = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...data,
+          learningGoal: data.subject, // Map subject to learningGoal
+          subject: data.subject,
+          currentLevel: data.level,
+          targetLevel: 'advanced', // Default target
+          timeCommitment: parseInt(data.timeAvailable) || 60,
+          learningStyle: 'visual', // Default
+          specificTopics: data.subject,
+          goals: data.goal,
           language: selectedLanguage
         })
       })
@@ -58,6 +85,10 @@ export default function OnboardingPage() {
         setTimeout(() => {
           router.push('/dashboard')
         }, 2000)
+      } else {
+        const error = await response.json()
+        console.error('Onboarding failed:', error)
+        setIsGenerating(false)
       }
     } catch (error) {
       console.error('Onboarding error:', error)

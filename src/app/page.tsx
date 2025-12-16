@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Target, MessageSquare, Zap, BarChart3, Sparkles, BookOpen, Trophy, Users, CheckCircle2, Star, Brain, Rocket, Clock, GraduationCap, TrendingUp, Award } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
+import { useTranslations } from '@/hooks/useTranslations'
+import { HeaderLanguageSelector } from '@/components/ui/header-language-selector'
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
+  const { t } = useTranslations()
 
   useEffect(() => {
     setMounted(true)
@@ -44,14 +47,15 @@ export default function Home() {
               </Link>
             </div>
             <div className="flex gap-2">
+              <HeaderLanguageSelector />
               <Link href="/auth/signin">
                 <Button variant="ghost" className="text-blue-700 hover:bg-blue-50">
-                  Sign In
+                  {t('common.signIn')}
                 </Button>
               </Link>
-              <Link href="/auth/signup">
+              <Link href="/onboarding">
                 <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-                  Get Started
+                  {t('common.getStarted')}
                 </Button>
               </Link>
             </div>
@@ -104,7 +108,7 @@ export default function Home() {
             transition={{ delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
           >
-            <Link href="/auth/signup">
+            <Link href="/onboarding">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button size="lg" className="text-lg px-10 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all">
                   Start Creating Custom Courses
@@ -239,7 +243,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center"
           >
-            <Link href="/auth/signup">
+            <Link href="/onboarding">
               <Button variant="outline" size="lg" className="border-2 border-blue-600 text-blue-700 hover:bg-blue-50">
                 View All Courses
                 <ArrowRight className="ml-2 w-4 h-4" />
@@ -466,7 +470,7 @@ export default function Home() {
             whileTap={{ scale: 0.95 }}
             className="inline-block"
           >
-            <Link href="/auth/signup">
+            <Link href="/onboarding">
               <Button size="lg" className="bg-white text-blue-700 hover:bg-gray-100 text-lg px-12 py-6 shadow-2xl">
                 Get Started Free
                 <ArrowRight className="ml-2 w-5 h-5" />

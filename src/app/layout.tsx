@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/providers";
-import { VoiceAISystem } from "@/components/voice/voice-ai-system";
+import { MinimalVoiceWidget } from "@/components/voice/minimal-voice-widget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,7 +47,7 @@ export default function RootLayout({
       >
         <Providers>
           {children}
-          <VoiceAISystem />
+          <MinimalVoiceWidget />
           <Toaster />
         </Providers>
       </body>

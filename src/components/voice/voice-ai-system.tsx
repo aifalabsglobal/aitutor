@@ -120,15 +120,22 @@ export function VoiceAISystem() {
         return () => recognition.stop()
     }, [isListening])
 
-    // Welcome greeting
+    // Welcome greeting - play only once per session
     useEffect(() => {
-        setTimeout(() => {
-            if (session?.user) {
-                speak(`Welcome to AIM Technologies! Hello ${session.user.name}, I'm your AI assistant. Press the mic or say commands.`)
-            } else {
-                speak('Welcome to AIM Technologies! I can help you learn. Press the microphone to get started.')
-            }
-        }, 1000)
+        // Check if greeting already played in this session
+        const greetingPlayed = sessionStorage.getItem('aifa_greeting_played')
+
+        if (!greetingPlayed && session) {
+            setTimeout(() => {
+                if (session?.user) {
+                    speak(`Welcome to AIM Technologies! Hello ${session.user.name}, I'm your AI assistant. Press the mic or say commands.`)
+                } else {
+                    speak('Welcome to AIM Technologies! I can help you learn. Press the microphone to get started.')
+                }
+                // Mark greeting as played
+                sessionStorage.setItem('aifa_greeting_played', 'true')
+            }, 1000)
+        }
     }, [session])
 
     return (

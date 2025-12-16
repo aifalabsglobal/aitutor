@@ -215,24 +215,25 @@ export default function CreateRoadmapPage() {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="description">Description</Label>
+                                    <Label htmlFor="description" className="text-gray-700 font-medium">Description</Label>
                                     <Textarea
                                         id="description"
                                         placeholder="Describe what this roadmap covers..."
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         rows={3}
+                                        className="border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <Label>Subject Area</Label>
+                                        <Label className="text-gray-700 font-medium">Subject Area</Label>
                                         <Select
                                             value={formData.subject}
                                             onValueChange={(v) => setFormData({ ...formData, subject: v })}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
                                                 <SelectValue placeholder="Select subject" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -248,12 +249,12 @@ export default function CreateRoadmapPage() {
                                     </div>
 
                                     <div>
-                                        <Label>Difficulty Level</Label>
+                                        <Label className="text-gray-700 font-medium">Difficulty Level</Label>
                                         <Select
                                             value={formData.difficulty}
                                             onValueChange={(v) => setFormData({ ...formData, difficulty: v })}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -270,13 +271,14 @@ export default function CreateRoadmapPage() {
                             {/* Personalized: Specific Topics */}
                             {roadmapType === 'PERSONALIZED' && (
                                 <div>
-                                    <Label htmlFor="specificTopics">Specific Topics to Cover (Optional)</Label>
+                                    <Label htmlFor="specificTopics" className="text-gray-700 font-medium">Specific Topics to Cover (Optional)</Label>
                                     <Textarea
                                         id="specificTopics"
                                         placeholder="e.g., HTML, CSS, JavaScript basics, React fundamentals, API integration..."
                                         value={formData.specificTopics}
                                         onChange={(e) => setFormData({ ...formData, specificTopics: e.target.value })}
                                         rows={3}
+                                        className="border-blue-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                     />
                                     <p className="text-sm text-slate-500 mt-1">
                                         The AI will generate a comprehensive roadmap including these topics and relevant prerequisites.

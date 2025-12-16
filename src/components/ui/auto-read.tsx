@@ -179,21 +179,45 @@ export function AutoRead({
         const utterance = new SpeechSynthesisUtterance(cleanedText)
         utteranceRef.current = utterance
 
-        utterance.rate = rate
-        utterance.pitch = 1
+        // Conversational settings for natural sound
+        utterance.rate = rate * 0.95 // Slightly slower for conversational feel
+        utterance.pitch = 1.05 // Slight pitch increase for friendlier tone
         utterance.volume = 1
 
         const detectedLang = detectLanguage(cleanedText)
         utterance.lang = detectedLang
 
+        // Enhanced voice selection for natural, human-like speech
         const voices = window.speechSynthesis.getVoices()
-        const languageVoice = voices.find(v => v.lang.startsWith(detectedLang.split('-')[0]))
-        const preferredVoice = voices.find(
-            (v) => v.lang === detectedLang && (v.name.includes('Google') || v.name.includes('Microsoft'))
-        ) || languageVoice || voices[0]
 
-        if (preferredVoice) {
-            utterance.voice = preferredVoice
+        // Priority: Google Neural > Microsoft Neural > Google > Microsoft > Local high-quality
+        const voicePreferences = [
+            // Highest quality: Neural voices
+            voices.find(v => v.name.includes('Google') && v.lang.startsWith(detectedLang.split('-')[0]) && v.name.toLowerCase().includes('neural')),
+            voices.find(v => v.name.includes('Microsoft') && v.lang.startsWith(detectedLang.split('-')[0]) && (v.name.includes('Neural') || v.name.includes('Natural'))),
+
+            // High quality: Standard Google/Microsoft
+            voices.find(v => v.name.includes('Google') && v.lang.startsWith(detectedLang.split('-')[0])),
+            voices.find(v => v.name.includes('Microsoft') && v.lang.startsWith(detectedLang.split('-')[0])),
+
+            // Amazon/Apple voices
+            voices.find(v => v.name.includes('Amazon') && v.lang.startsWith(detectedLang.split('-')[0])),
+            voices.find(v => (v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Daniel')) && v.lang.startsWith(detectedLang.split('-')[0])),
+
+            // Exact language match (non-eSpeak)
+            voices.find(v => v.lang === detectedLang && !v.name.includes('eSpeak')),
+
+            // Language family match
+            voices.find(v => v.lang.startsWith(detectedLang.split('-')[0]) && !v.name.includes('eSpeak')),
+
+            // Fallback
+            voices.find(v => v.lang.startsWith(detectedLang.split('-')[0]))
+        ]
+
+        const selectedVoice = voicePreferences.find(v => v !== undefined)
+        if (selectedVoice) {
+            utterance.voice = selectedVoice
+            console.log(`🎤 AutoRead using: ${selectedVoice.name} (${selectedVoice.lang})`)
         }
 
         utterance.onstart = () => {
@@ -350,8 +374,19 @@ export function AutoRead({
     )
 }
 
-// Utility to speak any text with multi-language support
-export function speakText(text: string, rate: number = 0.9, lang: string = 'en-US'): Promise<void> {
+/**
+ * Enhanced conversational text-to-speech utility with multi-language support
+ * Features:
+ * - Natural, human-like voice selection (prefers Neural/Google voices)
+ * - Conversational pacing with natural pauses
+ * - Pitch variation for expressiveness
+ * - Advanced text preprocessing for natural speech
+ */
+export function speakText(text: string, rate: number = 0.9, lang: string = 'en-US', options?: {
+    pitch?: number,
+    volume?: number,
+    conversational?: boolean
+}): Promise<void> {
     return new Promise((resolve) => {
         if (typeof window === 'undefined' || !window.speechSynthesis) {
             resolve()
@@ -360,20 +395,122 @@ export function speakText(text: string, rate: number = 0.9, lang: string = 'en-U
 
         window.speechSynthesis.cancel()
 
-        // Clean text
+        // Advanced text preprocessing for natural speech
         let cleanedText = text
+            // Remove emojis
             .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
             .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')
             .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
+            .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')
+            .replace(/[\u{2600}-\u{26FF}]/gu, '')
+            .replace(/[\u{2700}-\u{27BF}]/gu, '')
+
+            // Convert symbols to natural speech
             .replace(/[•●○]/g, ', ')
+            .replace(/→/g, ' to ')
+            .replace(/←/g, ' from ')
+            .replace(/\//g, ' or ')
+            .replace(/&/g, ' and ')
+            .replace(/@/g, ' at ')
+            .replace(/#/g, ' hashtag ')
+            .replace(/%/g, ' percent ')
+            .replace(/\$/g, ' dollar ')
+            .replace(/€/g, ' euro ')
+            .replace(/£/g, ' pound ')
+
+            // Add natural pauses for better conversational flow
+            .replace(/([.!?])\s+/g, '$1... ') // Longer pause after sentences
+            .replace(/([,;:])\s+/g, '$1.. ') // Medium pause after clauses
+            .replace(/\n\n+/g, '... ') // Pause for paragraphs
+            .replace(/\n/g, '. ') // Small pause for line breaks
+
+            // Clean up whitespace
             .replace(/\s+/g, ' ')
             .trim()
 
-        const utterance = new SpeechSynthesisUtterance(cleanedText)
-        utterance.rate = rate
-        utterance.lang = lang
-        utterance.onend = () => resolve()
-        utterance.onerror = () => resolve()
-        window.speechSynthesis.speak(utterance)
+        // Wait for voices to load
+        const speakWithVoice = () => {
+            const utterance = new SpeechSynthesisUtterance(cleanedText)
+
+            // Enhanced conversational settings
+            utterance.rate = options?.conversational !== false ? rate * 0.95 : rate // Slightly slower for conversational feel
+            utterance.pitch = options?.pitch ?? 1.0 // Natural pitch, slightly varied
+            utterance.volume = options?.volume ?? 1.0
+            utterance.lang = lang
+
+            // Intelligent voice selection for natural, human-like speech
+            const voices = window.speechSynthesis.getVoices()
+
+            // Priority order for voice selection (most natural sounding)
+            const voicePreferences = [
+                // Google voices (highest quality, most natural)
+                (v: SpeechSynthesisVoice) => v.name.includes('Google') && v.lang.startsWith(lang.split('-')[0]) && v.name.toLowerCase().includes('neural'),
+                (v: SpeechSynthesisVoice) => v.name.includes('Google') && v.lang.startsWith(lang.split('-')[0]),
+
+                // Microsoft voices (second priority, also high quality)
+                (v: SpeechSynthesisVoice) => v.name.includes('Microsoft') && v.lang.startsWith(lang.split('-')[0]) && (v.name.includes('Neural') || v.name.includes('Natural')),
+                (v: SpeechSynthesisVoice) => v.name.includes('Microsoft') && v.lang.startsWith(lang.split('-')[0]),
+
+                // Amazon Polly / AWS voices
+                (v: SpeechSynthesisVoice) => v.name.includes('Amazon') && v.lang.startsWith(lang.split('-')[0]),
+
+                // Apple voices (iOS/macOS)
+                (v: SpeechSynthesisVoice) => v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Daniel'),
+                (v: SpeechSynthesisVoice) => v.name.includes('Apple') && v.lang.startsWith(lang.split('-')[0]),
+
+                // Exact language match
+                (v: SpeechSynthesisVoice) => v.lang === lang && !v.name.includes('eSpeak'),
+
+                // Language family match
+                (v: SpeechSynthesisVoice) => v.lang.startsWith(lang.split('-')[0]) && !v.name.includes('eSpeak'),
+
+                // Local voices
+                (v: SpeechSynthesisVoice) => v.localService && v.lang.startsWith(lang.split('-')[0]),
+
+                // Fallback to any matching language
+                (v: SpeechSynthesisVoice) => v.lang.startsWith(lang.split('-')[0])
+            ]
+
+            // Find best matching voice
+            let selectedVoice: SpeechSynthesisVoice | undefined
+            for (const preference of voicePreferences) {
+                selectedVoice = voices.find(preference)
+                if (selectedVoice) break
+            }
+
+            if (selectedVoice) {
+                utterance.voice = selectedVoice
+                console.log(`🎤 Speaking with voice: ${selectedVoice.name} (${selectedVoice.lang})`)
+            } else {
+                console.log(`⚠️ No ideal voice found for ${lang}, using default`)
+            }
+
+            // Event handlers
+            utterance.onend = () => {
+                console.log('✅ Speech completed')
+                resolve()
+            }
+
+            utterance.onerror = (event) => {
+                console.error('❌ Speech error:', event.error)
+                resolve()
+            }
+
+            // Speak with natural intonation
+            window.speechSynthesis.speak(utterance)
+        }
+
+        // Ensure voices are loaded before speaking
+        const voices = window.speechSynthesis.getVoices()
+        if (voices.length > 0) {
+            speakWithVoice()
+        } else {
+            // Wait for voices to load
+            window.speechSynthesis.onvoiceschanged = () => {
+                speakWithVoice()
+            }
+            // Fallback timeout
+            setTimeout(speakWithVoice, 100)
+        }
     })
 }

@@ -15,10 +15,16 @@ export function JarvisAssistant() {
         if (context.currentPage === '/' && !context.userId) {
             setSuggestion("Welcome! I'm JARVIS, your AI learning assistant. Try voice commands with Ctrl+K.")
             setTimeout(() => {
-                speakText("Welcome! I'm JARVIS, your AI learning assistant.", 1.0, 'en-US')
+                // Use conversational mode for warm, friendly greeting
+                speakText(
+                    "Welcome! I'm JARVIS, your AI learning assistant.",
+                    0.9,
+                    context.preferredLanguage || 'en-US',
+                    { conversational: true }
+                )
             }, 1000)
         }
-    }, [context.currentPage, context.userId])
+    }, [context.currentPage, context.userId, context.preferredLanguage])
 
     // Status HUD
     const getStatusColor = () => {

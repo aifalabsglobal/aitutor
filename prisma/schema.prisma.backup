@@ -1,0 +1,150 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  role          String    @default("STUDENT")
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  preferences   UserPreference?
+  sessions      UserSession[]
+  auditLogs     AuditLog[]
+  roadmaps      Roadmap[]
+  badges        Badge[]
+  achievements  Achievement[]
+  profile       StudentProfile?
+}
+
+model UserPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  voiceEnabled      Boolean  @default(true)
+  voiceSpeed        Float    @default(1.0)
+  voiceLanguage     String   @default("en-US")
+  autoRead          Boolean  @default(false)
+  
+  theme             String   @default("system")
+  compactMode       Boolean  @default(false)
+  sidebarCollapsed  Boolean  @default(false)
+  
+  emailNotify       Boolean  @default(true)
+  pushNotify        Boolean  @default(false)
+  smsNotify         Boolean  @default(false)
+  weeklyDigest      Boolean  @default(true)
+  
+  dailyGoalMinutes  Int      @default(30)
+  difficultyLevel   String   @default("adaptive")
+  reminderTime      String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  userId            String?
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  action            String
+  resource          String
+  resourceId        String?
+  oldValue          Json?
+  newValue          Json?
+  ipAddress         String?
+  userAgent         String?
+  metadata          Json?
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+model UserSession {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  token             String   @unique
+  ipAddress         String?
+  userAgent         String?
+  lastActivityAt    DateTime @default(now())
+  expiresAt         DateTime
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+}
+
+model Roadmap {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title             String
+  description       String?
+  subject           String
+  difficulty        String   @default("intermediate")
+  status            String   @default("ACTIVE")
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model Badge {
+  id         String    @id @default(cuid())
+  userId     String
+  badgeType  String
+  earnedAt   DateTime  @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, badgeType])
+}
+
+model Achievement {
+  id              String          @id @default(cuid())
+  userId          String
+  achievementType String
+  progress        Int             @default(0)
+  targetProgress  Int             @default(100)
+  completed       Boolean         @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, achievementType])
+}
+
+model StudentProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  level           Int      @default(1)
+  xp              Int      @default(0)
+  streak          Int      @default(0)
+  lastActiveDate  DateTime @default(now())
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

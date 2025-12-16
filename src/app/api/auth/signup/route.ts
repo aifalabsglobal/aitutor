@@ -21,25 +21,28 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
+        // password: hashedPassword, // TODO: Uncomment after schema regeneration
         role: 'STUDENT',
       }
     })
 
-    await db.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'USER_REGISTERED',
-        resource: 'User',
-        resourceId: user.id,
-        metadata: { registrationMethod: 'email' }
-      }
-    })
+    // TODO: Re-enable after schema regeneration
+    // await db.auditLog.create({
+    //   data: {
+    //     userId: user.id,
+    //     action: 'USER_REGISTERED',
+    //     resource: 'User',
+    //     resourceId: user.id,
+    //     metadata: { registrationMethod: 'email' }
+    //   }
+    // })
 
     return NextResponse.json({
       success: true,
       user: { id: user.id, name: user.name, email: user.email }
     })
   } catch (error) {
+    console.error('Registration error:', error)
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }
 }
